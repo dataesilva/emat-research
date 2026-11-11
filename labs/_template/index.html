@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- TEMPLATE: copy this folder to labs/<slug>/, set data-lab on <body> to <slug>,
+     add the lab to data/labs.json, and create labs/<slug>/updates.json. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMAT Research</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body data-lab="CHANGE-ME">
+  <a class="skip" href="#main">Skip to content</a>
+  <header id="site-header"></header>
+  <main id="main">
+    <div class="wrap">
+      <div class="lab-hero">
+        <div class="block" id="lab-block"></div>
+        <h1 id="lab-name"></h1>
+        <p id="lab-summary"></p>
+        <p class="label" id="lab-lead" style="margin-top:16px"></p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <section>
+            <div class="sec-head"><h2>About</h2></div>
+            <div class="prose"><p>Describe this lab here: research questions, methods, and current projects. This section is plain HTML, so write freely.</p></div>
+          </section>
+          <section>
+            <div class="sec-head"><h2>Updates</h2></div>
+            <ul class="updates" id="updates-list"></ul>
+          </section>
+        </div>
+        <aside>
+          <section>
+            <div class="sec-head"><h2>Upcoming</h2></div>
+            <ul class="updates" id="events-list" style="list-style:none;padding:0;margin:0"></ul>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+  <script src="../../assets/js/site.js" data-root="../../"></script>
+  <script src="../../assets/js/lab.js"></script>
+</body>
+</html>

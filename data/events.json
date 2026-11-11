@@ -1,0 +1,57 @@
+[
+  {
+    "title": "Lab A weekly meeting",
+    "type": "meeting",
+    "date": "2026-11-16",
+    "time": "10:00",
+    "endTime": "11:00",
+    "location": "Room 101 / Zoom",
+    "lab": "example-lab-a",
+    "repeat": "weekly",
+    "until": "2027-05-01"
+  },
+  {
+    "title": "Lab B reading group",
+    "type": "meeting",
+    "date": "2026-11-17",
+    "time": "14:00",
+    "endTime": "15:30",
+    "location": "Room 204",
+    "lab": "example-lab-b",
+    "repeat": "weekly",
+    "until": "2027-05-01"
+  },
+  {
+    "title": "Lab C project sync",
+    "type": "meeting",
+    "date": "2026-11-18",
+    "time": "13:00",
+    "endTime": "14:00",
+    "location": "Zoom",
+    "lab": "example-lab-c",
+    "repeat": "weekly",
+    "until": "2027-05-01"
+  },
+  {
+    "title": "Example Conference: abstract deadline",
+    "type": "deadline",
+    "date": "2026-12-04",
+    "url": "https://example.org/cfp",
+    "notes": "Placeholder. Replace with a real conference."
+  },
+  {
+    "title": "Example Workshop call for papers (closes)",
+    "type": "cfp",
+    "date": "2027-01-15",
+    "url": "https://example.org/workshop-cfp",
+    "lab": "example-lab-b"
+  },
+  {
+    "title": "Example Conference 2027",
+    "type": "conference",
+    "date": "2027-04-12",
+    "endDate": "2027-04-16",
+    "location": "City, Country",
+    "url": "https://example.org/conf"
+  }
+]

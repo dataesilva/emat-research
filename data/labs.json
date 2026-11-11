@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "example-lab-a",
+    "name": "Example Lab A",
+    "summary": "Placeholder: human-centered studies of how people adopt and resist emerging technologies.",
+    "color": "#2f6f9f",
+    "lead": "Dr. Jane Doe"
+  },
+  {
+    "slug": "example-lab-b",
+    "name": "Example Lab B",
+    "summary": "Placeholder: governance, policy, and accountability for algorithmic systems.",
+    "color": "#a8541f",
+    "lead": "Dr. Alex Roe"
+  },
+  {
+    "slug": "example-lab-c",
+    "name": "Example Lab C",
+    "summary": "Placeholder: infrastructure, labor, and the environmental footprint of computing.",
+    "color": "#3d7a4f",
+    "lead": "Dr. Sam Poe"
+  }
+]

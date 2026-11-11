@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMAT Research</title>
+  <meta name="description" content="Research group working across sociotechnical systems: labs, updates, and calendar.">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header id="site-header"></header>
+
+  <main id="main">
+    <div class="wrap">
+      <div class="hero">
+        <h1 id="hero-title">Research across sociotechnical systems.</h1>
+        <p id="hero-sub"></p>
+      </div>
+
+      <section id="labs" aria-labelledby="labs-h">
+        <div class="sec-head"><h2 id="labs-h">Labs &amp; working groups</h2></div>
+        <div class="grid" id="labs-grid"></div>
+      </section>
+
+      <section id="updates" aria-labelledby="updates-h">
+        <div class="sec-head"><h2 id="updates-h">Latest updates</h2></div>
+        <div class="chips" id="update-chips"></div>
+        <ul class="updates" id="updates-list"></ul>
+      </section>
+
+      <section id="calendar" aria-labelledby="cal-h">
+        <div class="sec-head"><h2 id="cal-h">Calendar</h2></div>
+        <div class="chips" id="cal-filters"></div>
+        <div class="cal-layout">
+          <div>
+            <div class="cal-bar">
+              <button class="btn" id="cal-prev" aria-label="Previous month">←</button>
+              <h3 id="cal-title" aria-live="polite"></h3>
+              <button class="btn" id="cal-next" aria-label="Next month">→</button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <div class="legend">
+              <span style="--c:var(--meeting)">Lab meeting</span>
+              <span style="--c:var(--deadline)">Deadline</span>
+              <span style="--c:var(--cfp)">Call for papers</span>
+              <span style="--c:var(--conference)">Conference</span>
+            </div>
+          </div>
+          <div class="agenda">
+            <h3 id="agenda-title">Upcoming</h3>
+            <ul class="updates" id="agenda-list" style="list-style:none;padding:0;margin:0"></ul>
+            <div class="agenda-actions">
+              <button class="btn" id="cal-today">Today</button>
+              <button class="btn" id="agenda-clear" hidden>Show upcoming</button>
+              <button class="btn" id="cal-ics">Download .ics</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+  <script src="assets/js/site.js" data-root="./"></script>
+  <script src="assets/js/home.js"></script>
+</body>
+</html>

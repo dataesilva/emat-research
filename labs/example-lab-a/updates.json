@@ -1,0 +1,15 @@
+[
+  {
+    "date": "2026-11-05",
+    "title": "Pilot study completed",
+    "summary": "Placeholder update. Finished data collection for the first pilot study.",
+    "type": "milestone"
+  },
+  {
+    "date": "2026-10-20",
+    "title": "Paper accepted",
+    "summary": "Placeholder update. Our workshop paper was accepted.",
+    "type": "publication",
+    "url": "https://example.org/paper"
+  }
+]
