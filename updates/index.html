@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Updates · EMAT Research</title>
+  <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header id="site-header"></header>
+  <main id="main" class="page">
+    <h1 class="page-title">Updates</h1>
+    <div class="wrap">
+      <div class="chips" id="chips"></div>
+      <ul class="ulist" id="list"></ul>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+  <script src="../assets/js/site.js" data-root="../"></script>
+  <script>
+    (async function () {
+      const S = window.Site, $ = (id) => document.getElementById(id);
+      const [, labs] = await Promise.all([S.chrome(), S.jsonOr("data/labs.json", [])]);
+      const bySlug = S.labsBySlug(labs), updates = await S.allUpdates(labs);
+      let filter = new URLSearchParams(location.search).get("lab") || "all";
+      $("chips").innerHTML = [`<button class="chip" data-lab="all">All labs</button>`]
+        .concat(labs.map((l) => `<button class="chip" data-lab="${S.esc(l.slug)}" style="--c:${S.safeColor(l.color)}"><span class="dot"></span>${S.esc(l.name)}</button>`)).join("");
+      const draw = () => {
+        $("chips").querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.lab === filter)));
+        const list = updates.filter((u) => filter === "all" || u.lab === filter);
+        $("list").innerHTML = list.map((u) => S.updateRow(u, bySlug, true)).join("") || `<li class="empty">No updates yet.</li>`;
+      };
+      $("chips").addEventListener("click", (e) => {
+        const b = e.target.closest(".chip"); if (!b) return;
+        filter = b.dataset.lab;
+        history.replaceState(null, "", filter === "all" ? location.pathname : "?lab=" + encodeURIComponent(filter));
+        draw();
+      });
+      draw();
+    })();
+  </script>
+</body>
+</html>

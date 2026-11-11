@@ -4,7 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EMAT Research</title>
-  <meta name="description" content="Research group working across sociotechnical systems: labs, updates, and calendar.">
+  <meta name="description" content="A network of labs and working groups researching sociotechnical systems.">
+  <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -12,57 +16,82 @@
   <header id="site-header"></header>
 
   <main id="main">
-    <div class="wrap">
-      <div class="hero">
-        <h1 id="hero-title">Research across sociotechnical systems.</h1>
-        <p id="hero-sub"></p>
+    <section class="hero" id="hero">
+      <h1 class="sr-only">EMAT Research</h1>
+      <canvas class="hero__canvas" aria-hidden="true"></canvas>
+      <div class="hero__mark" data-mark-anchor role="img" aria-label="Interactive group logo made of particles"></div>
+      <div class="hero__headline" id="hero-headline"></div>
+      <p class="hero__hint mono">Move to disturb · Click to scatter</p>
+    </section>
+
+    <section class="sec" id="labs" aria-labelledby="labs-h">
+      <div class="sec-head">
+        <h2 id="labs-h">Labs &amp; working groups <span>Where the work happens.</span></h2>
+        <div class="sec-tools">
+          <button class="arrow" data-rail="prev" aria-label="Scroll labs left">←</button>
+          <button class="arrow" data-rail="next" aria-label="Scroll labs right">→</button>
+        </div>
       </div>
+      <div class="rail"><ul class="rail__list" id="labs-list"></ul></div>
+    </section>
 
-      <section id="labs" aria-labelledby="labs-h">
-        <div class="sec-head"><h2 id="labs-h">Labs &amp; working groups</h2></div>
-        <div class="grid" id="labs-grid"></div>
-      </section>
+    <section class="themes" aria-labelledby="themes-h">
+      <h2 class="themes__lede" id="themes-h">We work where people, institutions, and technologies meet.</h2>
+      <div class="themes__window"><div class="themes__track" id="themes-track"></div></div>
+    </section>
 
-      <section id="updates" aria-labelledby="updates-h">
-        <div class="sec-head"><h2 id="updates-h">Latest updates</h2></div>
-        <div class="chips" id="update-chips"></div>
-        <ul class="updates" id="updates-list"></ul>
-      </section>
+    <section class="sec" id="updates" aria-labelledby="updates-h">
+      <div class="sec-head">
+        <h2 id="updates-h">Updates <span>Across every lab.</span></h2>
+        <div class="sec-tools">
+          <a class="more" href="updates/">All updates</a>
+          <button class="arrow" data-rail="prev" aria-label="Scroll updates left">←</button>
+          <button class="arrow" data-rail="next" aria-label="Scroll updates right">→</button>
+        </div>
+      </div>
+      <div class="rail"><ul class="rail__list" id="updates-list"></ul></div>
+    </section>
 
-      <section id="calendar" aria-labelledby="cal-h">
-        <div class="sec-head"><h2 id="cal-h">Calendar</h2></div>
-        <div class="chips" id="cal-filters"></div>
+    <section class="sec" id="calendar" aria-labelledby="cal-h">
+      <div class="sec-head"><h2 id="cal-h">Calendar <span>Meetings, deadlines, conferences.</span></h2></div>
+      <div class="cal">
+        <div class="cal-filters mono" id="cal-filters"></div>
         <div class="cal-layout">
           <div>
             <div class="cal-bar">
-              <button class="btn" id="cal-prev" aria-label="Previous month">←</button>
               <h3 id="cal-title" aria-live="polite"></h3>
-              <button class="btn" id="cal-next" aria-label="Next month">→</button>
+              <div>
+                <button class="arrow" id="cal-prev" aria-label="Previous month">←</button>
+                <button class="arrow" id="cal-next" aria-label="Next month">→</button>
+              </div>
             </div>
             <div class="cal-grid" id="cal-grid"></div>
-            <div class="legend">
-              <span style="--c:var(--meeting)">Lab meeting</span>
-              <span style="--c:var(--deadline)">Deadline</span>
-              <span style="--c:var(--cfp)">Call for papers</span>
-              <span style="--c:var(--conference)">Conference</span>
-            </div>
           </div>
           <div class="agenda">
             <h3 id="agenda-title">Upcoming</h3>
-            <ul class="updates" id="agenda-list" style="list-style:none;padding:0;margin:0"></ul>
-            <div class="agenda-actions">
+            <ul class="evlist" id="agenda-list"></ul>
+            <div class="actions">
               <button class="btn" id="cal-today">Today</button>
               <button class="btn" id="agenda-clear" hidden>Show upcoming</button>
-              <button class="btn" id="cal-ics">Download .ics</button>
+              <button class="btn btn--solid" id="cal-ics">Download .ics</button>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
+
+    <section class="about" id="about" aria-labelledby="about-h">
+      <h2 class="mono muted" id="about-h" style="margin:0;font-weight:500">About</h2>
+      <div>
+        <p id="about-text"></p>
+        <div class="actions" id="about-actions"></div>
+      </div>
+    </section>
   </main>
 
   <footer id="site-footer"></footer>
   <script src="assets/js/site.js" data-root="./"></script>
+  <script src="assets/js/mark.js"></script>
   <script src="assets/js/home.js"></script>
 </body>
 </html>
