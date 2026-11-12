@@ -75,30 +75,30 @@
     "lead": "Dr. David E Silva",
     "themes": ["algorithmic accountability", "platform governance", "public-interest tech"],
     "mark": [
-      "#######",
-      "#......",
+      "#####..",
+      "#....##",
       "####...",
       "..###..",
       "...####",
-      "......#",
-      "#######"
+      "##....#",
+      "..#####"
     ]
   },
     {
-    "slug": "example-lab-b",
-    "name": "Example Lab B",
-    "summary": "Placeholder: governance, policy, and accountability for algorithmic systems.",
+    "slug": "design-circular",
+    "name": "Designing for Circularity",
+    "summary": "Building the tools that make circular economies realities; starting with the future of fashion.",
     "color": "#F49FBC",
     "lead": "Dr. David E Silva",
     "themes": ["algorithmic accountability", "platform governance", "public-interest tech"],
     "mark": [
-      "#######",
-      "#......",
-      "#......",
-      "#######",
-      "......#",
-      "......#",
-      "#######"
+      "##..###",
+      "##.....",
+      "##..###",
+      ".##....",
+      "..##...",
+      "...##..",
+      "....##."
     ]
   }
 ]
