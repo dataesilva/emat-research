@@ -1,18 +1,46 @@
-/* Interactive particle mark.
-   Particles fly in and assemble into a glyph (a mask of "#" cells), get pushed by
-   the pointer, shimmer while idle, and burst apart on click/tap, then re-form.
-   Usage: new Mark(rootEl, { mask, base, accents }) where rootEl contains a <canvas>
-   (covering rootEl) and an element with [data-mark-anchor] that sets the glyph's box. */
+/* Hero field: one plane of orbs receding back from the screen, flowing like water.
+   The E is not a separate element. It is a relief in the same field: orbs inside a
+   soft E-shaped mask rise toward the viewer (bigger, brighter), then sink below the
+   surface (smaller, dimmer) until the letter reads as a void. A wavefront sweeps the
+   letter so it never moves all at once.
+   Interactions (kept from the earlier particle mark, softened): the pointer lifts and
+   gently parts the orbs under it and warms them toward the accent colors (lab colors on
+   the home page); a click scatters the orbs outward on a ripple that springs back;
+   while idle, the odd orb flickers warm.
+
+   Usage: new Mark(rootEl, { mask, base, accents }) where rootEl contains a <canvas> covering it
+   and an element with [data-mark-anchor] whose box sets where and how big the E is.
+   mark.render(seconds) draws a single frame (handy for testing). */
 (function () {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
   const DEFAULT_MASK = ["#######", "#......", "#......", "#..####", "#......", "#......", "#######"];
 
+  const TILT = (55 * Math.PI) / 180;            // plane leans back 55° from facing the viewer
+  const SIN = Math.sin(TILT), COS = Math.cos(TILT);
+  const D = 10;                                   // depth of the plane's center (the E's center)
+  const PERIOD = 9;                               // seconds for a full rise → sink → rise
+
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const rgb = (h) => {
     const m = /^#?([0-9a-f]{6})$/i.exec(h || "");
     const n = m ? parseInt(m[1], 16) : 0xffffff;
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   };
-  const mix = (a, b, t) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
+
+  /* One soft orb, drawn once and stamped thousands of times. */
+  const CORE = 0.55;                              // solid core as a fraction of the sprite radius
+  function makeSprite([r, g, b]) {
+    const c = document.createElement("canvas"), n = 64;
+    c.width = c.height = n;
+    const x = c.getContext("2d"), grd = x.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2);
+    grd.addColorStop(0, `rgba(${r},${g},${b},1)`);
+    grd.addColorStop(CORE * 0.75, `rgba(${r},${g},${b},0.95)`);
+    grd.addColorStop(CORE, `rgba(${r},${g},${b},0.4)`);
+    grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    x.fillStyle = grd; x.fillRect(0, 0, n, n);
+    return c;
+  }
 
   class Mark {
     constructor(root, opts = {}) {
@@ -22,151 +50,208 @@
       if (!this.canvas || !this.anchor) return;
       this.ctx = this.canvas.getContext("2d");
       this.mask = opts.mask && opts.mask.length ? opts.mask : DEFAULT_MASK;
-      this.sub = opts.sub || 3;
-      this.base = rgb(opts.base || "#ffffff");
-      this.accents = (opts.accents && opts.accents.length ? opts.accents : ["#ffffff"]).map(rgb);
       this.cols = Math.max(...this.mask.map((r) => r.length));
       this.rows = this.mask.length;
+      this.cells = [];
+      this.mask.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === "#") this.cells.push([c, r]); }));
       this.anchor.style.aspectRatio = this.cols + " / " + this.rows;
-      this.pointer = { x: 0, y: 0, on: false };
-      this.parts = [];
-      this.dust = [];
-      this.build(opts.dust ?? 80);
-      this.resize(true);
+      this.sprite = makeSprite(rgb(opts.base || "#ffffff"));
+      this.accentSprites = (opts.accents && opts.accents.length ? opts.accents : ["#ffffff"]).map((c) => makeSprite(rgb(c)));
+      this.pointer = { on: false, u: 0, v: 0, su: 0, sv: 0, amt: 0 };
+      this.ripples = [];
+      this.activity = (window.Site && window.Site.activity) || 0;
+      window.addEventListener("site:activity", (e) => { this.activity = e.detail || 0; });
 
-      new ResizeObserver(() => this.resize(false)).observe(root);
+      this.resize();
+      new ResizeObserver(() => { this.resize(); if (!this.running) this.drawStill(); }).observe(root);
       root.addEventListener("pointermove", (e) => this.track(e));
-      root.addEventListener("pointerleave", () => (this.pointer.on = false));
-      root.addEventListener("pointerdown", (e) => this.burst(e));
+      root.addEventListener("pointerleave", () => { this.pointer.on = false; });
+      root.addEventListener("pointerdown", (e) => {
+        if (reduce.matches || !this.track(e)) return;
+        this.ripples.push({ u: this.pointer.u, v: this.pointer.v, t0: this.t });
+        if (this.ripples.length > 3) this.ripples.shift();
+      });
       new IntersectionObserver(([en]) => (en.isIntersecting ? this.start() : this.stop())).observe(root);
-      reduce.addEventListener && reduce.addEventListener("change", () => this.resize(true));
+      reduce.addEventListener && reduce.addEventListener("change", () => { this.stop(); this.start(); });
     }
 
-    build(dustCount) {
-      const s = this.sub;
-      this.mask.forEach((row, r) => [...row].forEach((ch, c) => {
-        if (ch !== "#") return;
-        for (let i = 0; i < s; i++) for (let j = 0; j < s; j++) {
-          this.parts.push({
-            u: c + (i + 0.5) / s, v: r + (j + 0.5) / s,
-            x: 0, y: 0, vx: 0, vy: 0, a: 0, heat: 0,
-            delay: Math.random() * 1100,
-            accent: this.accents[Math.floor(Math.random() * this.accents.length)],
-          });
-        }
-      }));
-      for (let i = 0; i < dustCount; i++) {
-        this.dust.push({ fx: Math.random(), fy: Math.random(), vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25, a: 0.08 + Math.random() * 0.3, x: 0, y: 0 });
-      }
-    }
-
-    resize(reset) {
+    /* ---------- layout: build the grid of orbs for the current size ---------- */
+    resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = this.root.clientWidth, h = this.root.clientHeight;
-      this.w = w; this.h = h; this.dpr = dpr;
+      Object.assign(this, { w, h, dpr });
       this.canvas.width = Math.round(w * dpr);
       this.canvas.height = Math.round(h * dpr);
       const a = this.anchor.getBoundingClientRect(), r = this.root.getBoundingClientRect();
-      this.cell = Math.min(a.width / this.cols, a.height / this.rows) || 0;
-      this.ox = a.left - r.left + (a.width - this.cell * this.cols) / 2;
-      this.oy = a.top - r.top + (a.height - this.cell * this.rows) / 2;
+      this.cx = a.left - r.left + a.width / 2;
+      this.cy = a.top - r.top + a.height / 2;
+      this.f = Math.max(h, w * 0.55) * 1.45;       // long lens: depth without a ballooning foreground
 
-      if (reset) {
-        const cx = w / 2, cy = this.oy + (this.cell * this.rows) / 2, R = Math.max(w, h) * 0.55;
-        for (const p of this.parts) {
-          const ang = Math.random() * Math.PI * 2, d = R * Math.random() ** 0.6;
-          p.x = cx + Math.cos(ang) * d; p.y = cy + Math.sin(ang) * d; p.vx = p.vy = 0; p.a = 0;
-        }
-        for (const d of this.dust) { d.x = d.fx * w; d.y = d.fy * h; }
-        this.t0 = null;
-      }
-      if (reduce.matches) this.drawStatic();
+      // E size on the plane. The tilt squashes depth by ~COS; stretch partly to compensate
+      // (fully would make the E a tall trapezoid).
+      const boxW = 0.9 * Math.min(a.width, (a.height * this.cols) / this.rows) || 300;
+      this.ew = (boxW * D) / this.f;
+      this.eh = (this.ew * this.rows) / this.cols / Math.sqrt(COS);
+      this.U = this.ew / this.cols;                 // one mask cell, the unit for every motion
+
+      const budget = w < 700 ? 3200 : 7000;
+      let s = this.ew / 22;
+      for (let i = 0; i < 4 && this.build(s) > budget; i++) s *= Math.sqrt(this.n / budget) * 1.03;
+      this.s = s;
     }
 
-    home(p) { return [this.ox + p.u * this.cell, this.oy + p.v * this.cell]; }
+    /* Even spacing on the plane; only the part that's on screen. Rows run near → far. */
+    build(s) {
+      const { w, h, cx, cy, f } = this;
+      const vAt = (sy) => { const q = -(sy - cy) / f, den = COS - q * SIN; return den > 0.04 ? (q * D) / den : Infinity; };
+      const vmin = vAt(h + 40);
+      const vmax = Math.min(vAt(-40), (D * 6 - D) / SIN);
+      const U = [], V = [], R = [], Q = [];
+      for (let j = Math.ceil(vmin / s); j * s <= vmax; j++) {
+        const v = j * s, Z = D + v * SIN;
+        if (Z < 1) continue;
+        const reach = ((Math.max(cx, w - cx) + 60) * Z) / f, kmax = Math.ceil(reach / s);
+        for (let k = -kmax; k <= kmax; k++) {
+          const u = k * s;
+          U.push(u); V.push(v); R.push(this.relief(u, v)); Q.push(Math.hypot(u / this.ew, v / this.eh));
+        }
+      }
+      this.n = U.length;
+      this.pu = Float32Array.from(U); this.pv = Float32Array.from(V);
+      this.pr = Float32Array.from(R); this.pq = Float32Array.from(Q);
+      this.heat = new Float32Array(this.n);                                  // 0..1 warmth, decays
+      this.tint = Uint8Array.from({ length: this.n }, () => Math.floor(Math.random() * this.accentSprites.length));
+      this.zFar = D + vmax * SIN;
+      return this.n;
+    }
 
+    /* 0..1: how much of the E's relief this plane point carries (soft shoulders). */
+    relief(u, v) {
+      const mx = (u / this.ew + 0.5) * this.cols, my = (0.5 - v / this.eh) * this.rows;
+      if (mx < -1 || my < -1 || mx > this.cols + 1 || my > this.rows + 1) return 0;
+      let best = 0;
+      for (const [c, r] of this.cells) {
+        const dx = Math.max(c - mx, 0, mx - (c + 1)), dy = Math.max(r - my, 0, my - (r + 1));
+        best = Math.max(best, 1 - smooth(0, 0.6, Math.hypot(dx, dy)));
+        if (best === 1) break;
+      }
+      return best;
+    }
+
+    /* Screen point → plane coords (ray hits the undisturbed plane). False above the horizon. */
     track(e) {
       const r = this.root.getBoundingClientRect();
-      this.pointer.x = e.clientX - r.left; this.pointer.y = e.clientY - r.top; this.pointer.on = true;
+      const dx = (e.clientX - r.left - this.cx) / this.f, dy = -(e.clientY - r.top - this.cy) / this.f;
+      const den = SIN * dy - COS;
+      const t = den < 0 ? (-COS * D) / den : -1;
+      if (t <= 0) { this.pointer.on = false; return false; }
+      const y = t * dy, z = t;
+      this.pointer.u = t * dx;
+      this.pointer.v = y * COS + (z - D) * SIN;
+      this.pointer.on = true;
+      return true;
     }
 
-    burst(e) {
-      if (reduce.matches) return;
-      this.track(e);
-      const { x, y } = this.pointer, reach = this.cell * 6;
-      for (const p of this.parts) {
-        const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1;
-        const f = this.cell * (0.35 + 0.9 * Math.max(0, 1 - d / reach));
-        p.vx += (dx / d) * f + (Math.random() - 0.5) * this.cell * 0.2;
-        p.vy += (dy / d) * f + (Math.random() - 0.5) * this.cell * 0.2;
-        p.heat = Math.max(p.heat, Math.max(0, 1 - d / reach));
-      }
-    }
-
+    /* ---------- animation ---------- */
     start() {
-      if (reduce.matches) return this.drawStatic();
+      if (reduce.matches) return this.drawStill();
       if (this.running) return;
       this.running = true;
-      this.last = performance.now();
-      const loop = (now) => { if (!this.running) return; this.step(now); this.draw(); requestAnimationFrame(loop); };
+      const t0 = performance.now() - (this.t || 0) * 1000;
+      const loop = (now) => { if (!this.running) return; this.render((now - t0) / 1000); requestAnimationFrame(loop); };
       requestAnimationFrame(loop);
     }
     stop() { this.running = false; }
 
-    step(now) {
-      if (this.t0 == null) this.t0 = now;
-      const dt = Math.max(0, Math.min(48, now - this.last)) / 16.67; this.last = now;
-      const t = now - this.t0, damp = Math.pow(0.86, dt);
-      const { x: px, y: py, on } = this.pointer, R = this.cell * 1.7, push = this.cell * 0.14;
+    /* Reduced motion / not yet animating: the E held fully raised, field at rest. */
+    drawStill() { this.render(3, { still: true, phase: 1 }); }
 
-      for (const p of this.parts) {
-        if (t < p.delay) continue;
-        p.a = Math.min(1, p.a + 0.035 * dt);
-        const [tx, ty] = this.home(p);
-        const k = 0.012 + 0.04 * Math.min(1, (t - p.delay) / 1400);   // soft fly-in, then firm
-        let ax = (tx - p.x) * k, ay = (ty - p.y) * k;
-        if (on) {
-          const dx = p.x - px, dy = p.y - py, d = Math.hypot(dx, dy);
-          if (d < R && d > 0.01) {
-            const f = (1 - d / R) ** 2 * push;
-            ax += (dx / d) * f; ay += (dy / d) * f;
-            p.heat = Math.max(p.heat, 1 - d / R);
-          }
-        }
-        p.vx = (p.vx + ax * dt) * damp; p.vy = (p.vy + ay * dt) * damp;
-        p.x += p.vx * dt; p.y += p.vy * dt;
-        p.heat *= Math.pow(0.955, dt);
-      }
-      if (Math.random() < 0.12 * dt) {                                   // idle shimmer
-        const p = this.parts[Math.floor(Math.random() * this.parts.length)];
-        if (p) p.heat = Math.max(p.heat, 0.85);
-      }
-      for (const d of this.dust) {
-        d.x += d.vx * dt; d.y += d.vy * dt;
-        if (d.x < 0) d.x += this.w; if (d.x > this.w) d.x -= this.w;
-        if (d.y < 0) d.y += this.h; if (d.y > this.h) d.y -= this.h;
-      }
-    }
-
-    draw() {
-      const c = this.ctx, s = (this.cell / this.sub) * 0.72;
+    render(t, { still = false, phase = null } = {}) {
+      this.t = t;
+      const c = this.ctx, { U, f, cx, cy, w, h, n, pu, pv, pr, pq, sprite } = this;
+      if (!n) return;
       c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-      c.clearRect(0, 0, this.w, this.h);
-      c.fillStyle = mix(this.base, this.base, 0);
-      for (const d of this.dust) { c.globalAlpha = d.a; c.fillRect(d.x, d.y, 1.5, 1.5); }
-      for (const p of this.parts) {
-        if (p.a <= 0) continue;
-        const z = s * (1 + p.heat * 0.35);
-        c.globalAlpha = p.a;
-        c.fillStyle = p.heat > 0.03 ? mix(this.base, p.accent, Math.min(1, p.heat * 1.4)) : `rgb(${this.base})`;
-        c.fillRect(p.x - z / 2, p.y - z / 2, z, z);
+      c.clearRect(0, 0, w, h);
+
+      const intro = still ? 1 : smooth(0, 1.6, t);
+      const Ab = U * 0.24 * (1 + 0.6 * this.activity);   // background swell
+      const Ar = U * 0.95;                                  // E relief height
+      const R0 = this.s * 0.15;                             // orb radius on the plane
+      const rMax = 13;                                      // cap foreground bokeh (sprite half-size, px)
+      const omega = (2 * Math.PI) / PERIOD;
+      const zNear = D * 0.75, zFar = this.zFar;
+
+      // pointer swell follows the pointer softly and fades in/out
+      const p = this.pointer;
+      p.amt += ((p.on && !still ? 1 : 0) - p.amt) * 0.06;
+      p.su += (p.u - p.su) * 0.12; p.sv += (p.v - p.sv) * 0.12;
+      const Ap = U * 0.55 * p.amt, sig2 = (U * 1.8) ** 2;
+      const rips = still ? [] : (this.ripples = this.ripples.filter((r) => t - r.t0 < 4.5));
+
+      // warmth decays frame to frame; idle shimmer lights the odd orb
+      const heat = this.heat, tint = this.tint, accents = this.accentSprites;
+      const dt = clamp(t - (this.lastT ?? t), 0, 0.1); this.lastT = t;
+      const cool = Math.pow(0.4, dt);                       // ~60% of warmth gone per second
+      if (!still && Math.random() < dt * 5) heat[Math.floor(Math.random() * n)] = 0.55;
+
+      for (let i = n - 1; i >= 0; i--) {                    // far rows first
+        let u = pu[i], v = pv[i];
+        const rel = pr[i];
+        const ut = u / U, vt = v / U;
+        const hb = still ? 0 :
+          0.55 * Math.sin(0.8 * ut + 0.5 * vt - 1.0 * t) +
+          0.30 * Math.sin(-0.45 * ut + 1.1 * vt - 0.65 * t + 1.3) +
+          0.15 * Math.sin(1.6 * ut - 0.35 * vt + 1.4 * t);
+
+        let P = 0;                                          // E phase: +1 raised … −1 sunk
+        if (rel > 0) {
+          const s = phase != null ? phase : Math.sin(omega * t - 1.4 * pq[i]);
+          P = Math.sign(s) * Math.abs(s) ** 0.7 * intro;   // linger at the extremes
+        }
+
+        let hz = Ab * hb * (1 - 0.5 * rel) + Ar * rel * P, glow = 0;
+        if (Ap > 0.001) {                                   // lift + part the orbs under the pointer
+          const du = u - p.su, dv = v - p.sv, d = Math.hypot(du, dv) || 1;
+          const g = Math.exp(-(d * d) / sig2);
+          hz += Ap * g; glow = g * p.amt;
+          const push = U * 0.32 * p.amt * g * Math.min(1, d / U);
+          u += (du / d) * push; v += (dv / d) * push;
+          if (g * p.amt > heat[i]) heat[i] = g * p.amt * 0.8;
+        }
+        for (const r of rips) {                             // scatter outward on a ring, then settle
+          const age = t - r.t0, du = u - r.u, dv = v - r.v, d = Math.hypot(du, dv) || 1;
+          const x = d - age * U * 6;
+          const env = Math.exp(-(x * x) / (U * U * 2.5)) * Math.exp(-age / 1.4);
+          hz += U * 0.5 * env * Math.cos((x / U) * 2.2);
+          u += (du / d) * U * 0.45 * env; v += (dv / d) * U * 0.45 * env;
+          glow += env * 0.45;
+          if (env * 0.9 > heat[i]) heat[i] = env * 0.9;
+        }
+        heat[i] *= cool;
+
+        // project (the plane normal points up and toward the viewer)
+        const Y = v * COS + hz * SIN, Z = D + v * SIN - hz * COS;
+        if (Z < 0.5) continue;
+        const sx = cx + (f * u) / Z, sy = cy - (f * Y) / Z;
+        if (sx < -20 || sx > w + 20 || sy < -20 || sy > h + 20) continue;
+
+        // quiet field, loud letter; when sunk, the E's shoulders catch a little light (a carved rim)
+        const rim = P < 0 ? 4 * rel * (1 - rel) * 0.16 * -P : 0;
+        const light = 0.14 + 0.09 * hb + rel * 0.66 * P + rim + 0.2 * glow;
+        const fog = 1 - 0.85 * smooth(zNear * 1.6, zFar, Z);
+        const edge = 1 - smooth(h * 0.8, h, sy);
+        const a = clamp(light, 0.025, 1) * fog * edge * (still ? 1 : smooth(0, 1.2, t));
+        if (a < 0.01) continue;
+        const rad = Math.min(rMax, ((R0 * f) / Z) * (1 + 0.32 * rel * P) / CORE);
+        const warm = still ? 0 : Math.min(0.5, heat[i]);
+        c.globalAlpha = a * (1 - warm);
+        c.drawImage(sprite, sx - rad, sy - rad, rad * 2, rad * 2);
+        if (warm > 0.02) {                                  // cross-fade toward the orb's accent color
+          c.globalAlpha = Math.min(1, a * 1.3 + 0.08) * warm;
+          c.drawImage(accents[tint[i]], sx - rad, sy - rad, rad * 2, rad * 2);
+        }
       }
       c.globalAlpha = 1;
-    }
-
-    drawStatic() {
-      for (const p of this.parts) { [p.x, p.y] = this.home(p); p.a = 1; p.heat = 0; }
-      this.draw();
     }
   }
 

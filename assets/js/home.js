@@ -14,7 +14,8 @@
     <li class="rail__item"><article class="lcard" data-cursor="Visit lab">
       <div class="lcard__art" style="--c:${S.safeColor(l.color)}">
         ${S.safeUrl(l.image) || /^[\w./-]+$/.test(l.image || "") ? `<img src="${S.esc(l.image)}" alt="" loading="lazy">` : ""}
-        <span class="mono">${S.esc((l.themes || [])[0] || "")}</span>
+        <div class="lcard__lens"></div>
+        <span class="mono" style="--c:${S.safeColor(l.color)}"><span class="dot"></span>${S.esc((l.themes || [])[0] || "")}</span>
       </div>
       <h3 class="lcard__title"><a class="lcard__link" href="labs/${S.esc(l.slug)}/">${S.esc(l.name)}</a></h3>
       <p class="lcard__dek">${S.esc(l.summary)}</p>
@@ -22,19 +23,54 @@
     </article></li>`).join("") || `<li class="empty">No labs listed yet.</li>`;
   S.rail($("labs"));
 
-  /* ---- Rotating themes (collected from every lab) ---- */
+  // Seep + lens follow the pointer inside each tile (CSS transitions the registered props).
+  $("labs-list").addEventListener("pointermove", (e) => {
+    const art = e.target.closest(".lcard") && e.target.closest(".lcard").querySelector(".lcard__art");
+    if (!art) return;
+    const r = art.getBoundingClientRect();
+    art.style.setProperty("--mx", (((e.clientX - r.left) / r.width) * 100).toFixed(1) + "%");
+    art.style.setProperty("--my", (((e.clientY - r.top) / r.height) * 100).toFixed(1) + "%");
+  });
+
+  /* ---- Updates (loaded early: they also set the group's activity level) ---- */
+  const updates = await S.allUpdates(labs);
+  S.setActivity(updates, events);
+
+  /* ---- Rotating themes (collected from every lab) ----
+     Drifts upward at a pace set by activity, surges with scroll speed, coasts back,
+     and slows almost to a stop (never quite) under the pointer. */
   const themes = labs.flatMap((l) => (l.themes || []).map((t) => ({ t, slug: l.slug })));
   if (themes.length) {
+    const track = $("themes-track"), win = track.parentElement;
     const list = `<ul class="themes__list">${themes.map(({ t, slug }) => `<li><a href="labs/${S.esc(slug)}/">${S.esc(t)}</a></li>`).join("")}</ul>`;
-    $("themes-track").innerHTML = list + list.replace("<ul", '<ul aria-hidden="true"');   // duplicated for a seamless loop
-    $("themes-track").lastElementChild.querySelectorAll("a").forEach((a) => (a.tabIndex = -1));
-    $("themes-track").style.setProperty("--dur", Math.max(16, themes.length * 2.4) + "s");
+    track.innerHTML = list + list.replace("<ul", '<ul aria-hidden="true"');   // duplicated for a seamless loop
+    track.lastElementChild.querySelectorAll("a").forEach((a) => (a.tabIndex = -1));
+    if (!S.reduce.matches) {
+      let off = 0, speed = 0, hover = false, raf = 0, last = 0;
+      const base = 0.28 + 0.32 * S.activity;                              // px per frame
+      const loop = (now) => {
+        const dt = Math.min(3, (now - (last || now)) / 16.67 || 1); last = now;
+        const target = hover ? 0.04 : base + Math.min(7, Math.abs(S.scrollVel) * 0.22);
+        speed += (target - speed) * (target > speed ? 0.08 : 0.025);      // quick to surge, slow to calm
+        const half = track.scrollHeight / 2;
+        off = half ? (off + speed * dt) % half : 0;
+        track.style.transform = `translateY(${-off.toFixed(2)}px)`;
+        raf = requestAnimationFrame(loop);
+      };
+      win.addEventListener("pointerenter", () => (hover = true));
+      win.addEventListener("pointerleave", () => (hover = false));
+      win.addEventListener("focusin", () => (hover = true));
+      win.addEventListener("focusout", () => (hover = false));
+      new IntersectionObserver(([en]) => {
+        if (en.isIntersecting && !raf) { last = 0; raf = requestAnimationFrame(loop); }
+        else if (!en.isIntersecting) { cancelAnimationFrame(raf); raf = 0; }
+      }).observe(win);
+    }
   } else {
     document.querySelector(".themes").hidden = true;
   }
 
   /* ---- Updates rail ---- */
-  const updates = await S.allUpdates(labs);
   $("updates-list").innerHTML = updates.slice(0, 12).map((u) => S.updateCard(u, bySlug)).join("") || `<li class="empty">No updates yet.</li>`;
   S.rail($("updates"));
 
@@ -67,7 +103,10 @@
       if (i % 7 === 0 && i >= 28 && d.getMonth() !== m) break;
       const evs = (byDay[key] || []).filter(keep);
       const cls = ["cal-day", d.getMonth() !== m && "out", key === today && "today", evs.length && "has", key === selected && "sel"].filter(Boolean).join(" ");
-      const bars = evs.slice(0, 3).map((o) => `<span class="bar ${S.types.includes(o.type) ? o.type : ""}">${S.esc(o.title)}</span>`).join("")
+      const bars = evs.slice(0, 3).map((o) => {
+        const p = S.pulse(o);
+        return `<span class="bar ${S.types.includes(o.type) ? o.type : ""}${p.cls}" style="${p.style}">${S.esc(o.title)}</span>`;
+      }).join("")
         + (evs.length > 3 ? `<span class="cal-more">+${evs.length - 3} more</span>` : "");
       html += `<button type="button" class="${cls}" data-day="${key}" aria-label="${S.esc(S.pretty(key))}${evs.length ? ", " + evs.length + " events" : ""}"><span class="n">${d.getDate()}</span>${bars}</button>`;
     }

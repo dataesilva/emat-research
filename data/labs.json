@@ -4,23 +4,50 @@
     "name": "Example Lab A",
     "summary": "Placeholder: human-centered studies of how people adopt and resist emerging technologies.",
     "color": "#3b82f6",
-    "lead": "Dr. Jane Doe",
-    "themes": ["technology adoption", "everyday AI", "participatory design"]
+    "lead": "Dr. Enrico Gandolfi",
+    "themes": ["technology adoption", "everyday AI", "participatory design"],
+    "mark": [
+      "#######",
+      "#......",
+      "#......",
+      "#..####",
+      "#.....#",
+      "#.....#",
+      "#######"
+    ]
   },
   {
     "slug": "example-lab-b",
     "name": "Example Lab B",
     "summary": "Placeholder: governance, policy, and accountability for algorithmic systems.",
     "color": "#f97316",
-    "lead": "Dr. Alex Roe",
-    "themes": ["algorithmic accountability", "platform governance", "public-interest tech"]
+    "lead": "Dr. David E Silva",
+    "themes": ["algorithmic accountability", "platform governance", "public-interest tech"],
+    "mark": [
+      "#######",
+      "#......",
+      "#......",
+      "#######",
+      "......#",
+      "......#",
+      "#######"
+    ]
   },
   {
     "slug": "example-lab-c",
     "name": "Example Lab C",
     "summary": "Placeholder: infrastructure, labor, and the environmental footprint of computing.",
     "color": "#22c55e",
-    "lead": "Dr. Sam Poe",
-    "themes": ["data infrastructure", "invisible labor", "computing and climate"]
+    "lead": "Dr. Cristin Compton",
+    "themes": ["data infrastructure", "invisible labor", "computing and climate"],
+    "mark": [
+      "#######",
+      "###....",
+      "##.....",
+      "##.....",
+      "##.....",
+      "###....",
+      "#######"
+    ]
   }
 ]
