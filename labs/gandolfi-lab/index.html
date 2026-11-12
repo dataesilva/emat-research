@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMAT Research</title>
+  <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body data-lab="gandolfi-lab">
+  <a class="skip" href="#main">Skip to content</a>
+  <header id="site-header"></header>
+  <main id="main">
+    <section class="hero lab-hero" id="hero">
+      <canvas class="hero__canvas" aria-hidden="true"></canvas>
+      <div class="hero__mark" data-mark-anchor role="img" aria-label="A flowing field of small orbs in which the letter E slowly rises and sinks"></div>
+      <div class="lab-hero__text">
+        <div>
+          <h1 id="lab-name"></h1>
+          <p id="lab-summary"></p>
+        </div>
+        <div class="mono muted">
+          <div id="lab-lead"></div>
+          <div id="lab-themes"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="cols sec">
+      <div>
+        <section aria-labelledby="about-h">
+          <h2 id="about-h">About</h2>
+          <div class="prose">
+            <!-- Edit freely: this section is plain HTML. -->
+            <p>Describe this lab here: the research questions, methods, people, and current projects.</p>
+          </div>
+        </section>
+        <section class="sec" aria-labelledby="updates-h" style="padding-top:var(--s8)">
+          <h2 id="updates-h">Updates</h2>
+          <ul class="ulist" id="updates-list"></ul>
+        </section>
+      </div>
+      <aside aria-labelledby="events-h">
+        <h2 id="events-h">Upcoming</h2>
+        <ul class="evlist" id="events-list"></ul>
+        <div class="actions"><button class="btn" id="lab-ics">Download .ics</button></div>
+      </aside>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+  <script src="../../assets/js/site.js" data-root="../../"></script>
+  <script src="../../assets/js/mark.js"></script>
+  <script src="../../assets/js/lab.js"></script>
+</body>
+</html>
