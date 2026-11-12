@@ -1,7 +1,7 @@
 [
   {
-    "slug": "example-lab-a",
-    "name": "Example Lab A",
+    "slug": "gandolfi-lab",
+    "name": "Gandolfi Lab",
     "summary": "Placeholder: human-centered studies of how people adopt and resist emerging technologies.",
     "color": "#3b82f6",
     "lead": "Dr. Enrico Gandolfi",
@@ -17,8 +17,25 @@
     ]
   },
   {
-    "slug": "example-lab-b",
-    "name": "Example Lab B",
+    "slug": "compton-lab",
+    "name": "Compton Lab",
+    "summary": "Placeholder: infrastructure, labor, and the environmental footprint of computing.",
+    "color": "#22c55e",
+    "lead": "Dr. Cristin A Compton",
+    "themes": ["data infrastructure", "invisible labor", "computing and climate"],
+    "mark": [
+      "#######",
+      "###....",
+      "##.....",
+      "##.....",
+      "##.....",
+      "###....",
+      "#######"
+    ]
+  },
+    {
+    "slug": "silva-lab",
+    "name": "Silva Lab",
     "summary": "Placeholder: governance, policy, and accountability for algorithmic systems.",
     "color": "#f97316",
     "lead": "Dr. David E Silva",
@@ -34,19 +51,53 @@
     ]
   },
   {
-    "slug": "example-lab-c",
-    "name": "Example Lab C",
-    "summary": "Placeholder: infrastructure, labor, and the environmental footprint of computing.",
-    "color": "#22c55e",
-    "lead": "Dr. Cristin Compton",
-    "themes": ["data infrastructure", "invisible labor", "computing and climate"],
+    "slug": "creative-work",
+    "name": "Creativity and Work",
+    "summary": "Examining creative and productive effort in a consumer society; currently focused on gamers and game developers.",
+    "color": "#982649",
+    "lead": "Drs. Enrico Gandolfi, Cristin A Compton, David E Silva",
+    "themes": ["algorithmic accountability", "platform governance", "public-interest tech"],
+    "mark": [
+      "...####",
+      "...#...",
+      "...####",
+      "##...##",
+      "##...##",
+      ".##.##.",
+      "...#..."
+    ]
+  },
+    {
+    "slug": "affin-maps",
+    "name": "Affinity Mapping",
+    "summary": "Exploring tools to express and display affinities across identity and place; how we organize ourselves.",
+    "color": "#FFD639",
+    "lead": "Dr. David E Silva",
+    "themes": ["algorithmic accountability", "platform governance", "public-interest tech"],
     "mark": [
       "#######",
-      "###....",
-      "##.....",
-      "##.....",
-      "##.....",
-      "###....",
+      "#......",
+      "####...",
+      "..###..",
+      "...####",
+      "......#",
+      "#######"
+    ]
+  },
+    {
+    "slug": "example-lab-b",
+    "name": "Example Lab B",
+    "summary": "Placeholder: governance, policy, and accountability for algorithmic systems.",
+    "color": "#F49FBC",
+    "lead": "Dr. David E Silva",
+    "themes": ["algorithmic accountability", "platform governance", "public-interest tech"],
+    "mark": [
+      "#######",
+      "#......",
+      "#......",
+      "#######",
+      "......#",
+      "......#",
       "#######"
     ]
   }
