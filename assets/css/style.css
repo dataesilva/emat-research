@@ -332,10 +332,11 @@ button { font: inherit; color: inherit; }
 .gf { margin-top: var(--s10); border-top: 1px solid var(--hair); padding: var(--s7) var(--margin) var(--s6); display: grid; gap: var(--s8); overflow: hidden; }
 .gf__nav { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); font-weight: 600; }
 .gf__nav a { text-decoration: none; } .gf__nav a:hover { text-decoration: underline; }
-.gf__word {   /* deliberately too big: crops off the right edge */
-  --w: 700; margin: 0 0 0 -.05em; font-size: clamp(5rem, 21vw, 24rem); line-height: .78;
+.gf__word {   /* big, stacked one word per line: "Emersion" / "Labs" */
+  --w: 700; margin: 0 0 0 -.05em; font-size: clamp(4rem, 17vw, 20rem); line-height: .84;
   letter-spacing: -.065em; white-space: nowrap;
 }
+.gf__word span { display: block; }
 .gf__row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s3); color: var(--muted); }
 
 /* ---------- Cursor blob ----------

@@ -9,8 +9,16 @@
   $("hero-headline").innerHTML = (site.headline || []).map((l) => `<p class="hero__line">${S.esc(l)}</p>`).join("");
   new window.Mark($("hero"), { mask: site.mark, accents: labs.map((l) => S.safeColor(l.color)) });
 
-  /* ---- Labs rail ---- */
-  $("labs-list").innerHTML = labs.map((l) => `
+  /* ---- Updates (loaded early: they order the labs and set the group's activity level) ---- */
+  const updates = await S.allUpdates(labs);
+  S.setActivity(updates, events);
+
+  /* ---- Labs rail: most recently active first (latest update on or before today).
+     Labs with no updates keep their labs.json order at the end (sort is stable). ---- */
+  const today = S.today(), latest = {};
+  for (const u of updates) if (u.date <= today && !latest[u.lab]) latest[u.lab] = u.date;
+  const ordered = [...labs].sort((a, b) => (latest[b.slug] || "").localeCompare(latest[a.slug] || ""));
+  $("labs-list").innerHTML = ordered.map((l) => `
     <li class="rail__item"><article class="lcard" data-cursor="Visit lab">
       <div class="lcard__art" style="--c:${S.safeColor(l.color)}">
         ${S.safeUrl(l.image) || /^[\w./-]+$/.test(l.image || "") ? `<img src="${S.esc(l.image)}" alt="" loading="lazy">` : ""}
@@ -22,6 +30,7 @@
       ${l.lead ? `<p class="mono muted" style="margin:0">${S.esc(l.lead)}</p>` : ""}
     </article></li>`).join("") || `<li class="empty">No labs listed yet.</li>`;
   S.rail($("labs"));
+  S.drift($("labs"));
 
   // Seep + lens follow the pointer inside each tile (CSS transitions the registered props).
   $("labs-list").addEventListener("pointermove", (e) => {
@@ -31,10 +40,6 @@
     art.style.setProperty("--mx", (((e.clientX - r.left) / r.width) * 100).toFixed(1) + "%");
     art.style.setProperty("--my", (((e.clientY - r.top) / r.height) * 100).toFixed(1) + "%");
   });
-
-  /* ---- Updates (loaded early: they also set the group's activity level) ---- */
-  const updates = await S.allUpdates(labs);
-  S.setActivity(updates, events);
 
   /* ---- Rotating themes (collected from every lab) ----
      Drifts upward at a pace set by activity, surges with scroll speed, coasts back,

@@ -231,6 +231,42 @@
     });
   };
 
+  /* Drift: a rail glides slowly back and forth so it's obvious there's more to see.
+     It eases to a stop under the pointer, rests a moment at each end, and stands still
+     for a few seconds after any touch, wheel, arrow, drag or focus. Off with reduced motion. */
+  S.drift = (section, speed = 0.45) => {                               // px per frame
+    const rail = section.querySelector(".rail");
+    if (!rail || S.reduce.matches) return;
+    let pos = rail.scrollLeft, v = 0, dir = 1, hold = 0, idle = 0, hover = false, raf = 0, last = 0;
+    const touched = () => { idle = performance.now() + 6000; v = 0; rail.style.scrollSnapType = ""; };
+    const loop = (now) => {
+      const dt = Math.min(3, (now - (last || now)) / 16.67 || 1); last = now;
+      const m = rail.scrollWidth - rail.clientWidth;
+      if (Math.abs(rail.scrollLeft - pos) > 1.5) { pos = rail.scrollLeft; idle = Math.max(idle, now + 6000); v = 0; } // someone else scrolled
+      if (now >= idle && !rail.classList.contains("rail--dragging")) {
+        const target = hover || now < hold || m <= 0 ? 0 : dir * speed;
+        v += (target - v) * Math.min(1, 0.04 * dt);
+        if (Math.abs(v) > 0.005) {
+          rail.style.scrollSnapType = "none";                          // snapping would fight the glide
+          pos = Math.max(0, Math.min(m, pos + v * dt));
+          rail.scrollLeft = pos;
+          if ((dir > 0 && pos >= m) || (dir < 0 && pos <= 0)) { dir = -dir; v = 0; hold = now + 2400; }
+        }
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    rail.addEventListener("pointerenter", () => (hover = true));
+    rail.addEventListener("pointerleave", () => (hover = false));
+    rail.addEventListener("pointerdown", (e) => { if (e.pointerType !== "mouse") touched(); });
+    rail.addEventListener("wheel", touched, { passive: true });
+    rail.addEventListener("focusin", touched);
+    section.querySelectorAll("[data-rail]").forEach((b) => b.addEventListener("click", touched));
+    new IntersectionObserver(([en]) => {
+      if (en.isIntersecting && !raf) { last = 0; pos = rail.scrollLeft; hold = performance.now() + 1500; raf = requestAnimationFrame(loop); }
+      else if (!en.isIntersecting && raf) { cancelAnimationFrame(raf); raf = 0; }
+    }).observe(rail);
+  };
+
   /* Cursor blob: trails the pointer on a spring, stretches with speed, is pulled toward and
      swells over interactive elements, and shows a label over [data-cursor]. */
   S.blob = () => {
@@ -332,7 +368,7 @@
     if (f) {
       f.className = "gf";
       f.innerHTML = `<nav class="gf__nav" aria-label="Footer">${links}${site.contact ? `<a href="mailto:${S.esc(site.contact)}">${S.esc(site.contact)}</a>` : ""}</nav>
-        <p class="gf__word" aria-hidden="true">${S.esc(site.name)}</p>
+        <p class="gf__word" aria-hidden="true"><span>${S.esc(first)}</span><span>${S.esc(rest.join(" "))}</span></p>
         <div class="gf__row mono"><span>© ${new Date().getFullYear()} ${S.esc(site.name)}</span><span>Sociotechnical research network</span></div>`;
     }
     S.blob();
